@@ -1,6 +1,5 @@
 import domain.rendering
 import domain.storage
-import concurrent.futures
 from PIL import Image, ImageDraw, ImageFont
 from pygments.lexers import get_lexer_by_name
 from pygments.token import (
@@ -17,16 +16,6 @@ from pygments.token import (
     Error,
     _TokenType,
 )
-
-
-class WorkerData:
-    def __init__(self):
-        self.input_files: list[str] = []
-        self.output_files: list[str] = []
-        self.fut = None
-
-    def future(self, f: concurrent.futures.Future):
-        self.fut = f
 
 
 styles = {
@@ -188,7 +177,7 @@ def render_png(location: domain.storage.Location, state: domain.rendering.SceneS
             fill="#ffffff",
         )
 
-    if draw_layer2 is None:
+    if im_layer2 is None:
         im.save(filename, "PNG")
     else:
         im_composite = Image.alpha_composite(im, im_layer2)
