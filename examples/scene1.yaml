@@ -1,0 +1,87 @@
+settings:
+  duration: 180s
+profiles:
+  - name: release
+    fps: 60
+    resolution:
+      width: 1080
+      height: 720
+    default: true
+  - name: preview
+    fps: 5
+    resolution:
+      width: 640
+      height: 480
+    debug: true
+area:
+  top: 0
+  left: 0
+  right: 100
+  bottom: 100
+  font-size-px: auto #auto | <number>
+style: #optional
+  background-color: "#3f3f3f"
+  font-file: filename.ttf
+timeline:
+  - keyframe: 0s
+    code:
+      syntax: java
+      text: |
+        public class A {
+        }
+  - keyframe: 10s
+    code:
+      syntax: java
+      text: |
+        public class A {
+          public static void main(String[] args) {
+            System.out.println("Hey");
+          }
+        }
+  - keyframe: 20s
+    note: test replace
+    code:
+      syntax: java
+      text: |
+        public class A {
+          public static void main(String[] args) {
+            System.out.println("Day");
+          }
+        }
+  - keyframe: 35s
+    note: test delete
+    code:
+      syntax: java
+      text: |
+        public class A {
+          public static void main(String[] args) {
+            System.out.print("Day");
+          }
+        }
+    screen-objects:
+    - id: system
+      action: add
+      type: highlight
+      kind: stream # stream | box
+      area:
+        col0: 5
+        row0: 3
+        col1: 10
+        row1: 3
+      background-color: "#57e346"
+
+  - keyframe: 45s
+    note: test insert after delete
+    code:
+      syntax: java
+      text: |
+        public class A {
+          public static void main(String[] args) {
+            System.out.print("Day");
+            // a comment
+          }
+        }
+    screen-objects:
+    - id: system
+      action: remove
+

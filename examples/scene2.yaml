@@ -1,0 +1,61 @@
+settings:
+  duration: 180s
+profiles:
+  - name: release
+    fps: 60
+    resolution:
+      width: 1080
+      height: 720
+    default: true
+  - name: preview
+    fps: 5
+    resolution:
+      width: 640
+      height: 480
+timeline:
+  - keyframe: 0s
+    code: # optional
+      syntax: java
+      text: |
+        main();
+
+        module main() {
+
+        }
+
+  - keyframe: 5s
+    code:
+      syntax: java
+      text: |
+        main();
+
+        module main() {
+        	cube();
+        }
+
+  - keyframe: 15s
+    highlights: # optional
+     - id: block-1
+       action: add # add:default | remove
+       background_color: yellow
+       text_color: black #optional
+       presentation: fade # fade:default | fill
+       range:
+         from: 5, 5
+         to: 15, 5
+
+  - keyframe: 30s
+    highlights:
+     - id: block-1
+       action: remove
+       presentation: fade
+
+  - keyframe: 15s
+    notes: # optional
+     - id: note-1
+       action: add # add:default | remove
+       background_color: yellow
+       text_color: black #optional
+       presentation: fade # fade | fill
+       shape: rectangle # rectangle:default
+       text: This is a point
