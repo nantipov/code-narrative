@@ -15,17 +15,10 @@ def read_scene_file(filename: str) -> domain.scene.Scene:
 
 def dict_to_scene(scene_dict: dict) -> domain.scene.Scene:
     scene = domain.scene.Scene()
-    scene.settings = read_settings(scene_dict)
     scene.profiles = read_profiles(scene_dict)
+    scene.view = read_view(scene_dict)
     scene.timeline = read_timeline(scene_dict)
     return scene
-
-
-def read_settings(scene_dict: dict) -> domain.scene.Settings:
-    settings = domain.scene.Settings()
-    # todo: cleanup
-    # settings.duration = scene_dict["duration"]
-    return settings
 
 
 def read_profiles(scene_dict: dict) -> list[domain.scene.Profile]:
@@ -44,6 +37,17 @@ def read_profiles(scene_dict: dict) -> list[domain.scene.Profile]:
             profile.is_debug = bool(p["debug"])
         profiles.append(profile)
     return profiles
+
+
+def read_view(scene_dict) -> domain.scene.View:
+    view = domain.scene.View()
+    view_dict = scene_dict["view"]
+    view.top = float(view_dict["top"])
+    view.left = float(view_dict["left"])
+    view.right = float(view_dict["right"])
+    view.bottom = float(view_dict["bottom"])
+    view.font_size_px_string = str(view_dict["font-size-px"])
+    return view
 
 
 def read_timeline(scene_dict: dict) -> list[domain.scene.Keyframe]:
@@ -85,8 +89,8 @@ def read_screen_objects(objects: list[dict]) -> list[domain.scene.ScreenObject]:
     return screen_objects
 
 
-def read_range(range_dict: dict) -> domain.scene.ScreenArea:
-    return domain.scene.ScreenArea(
+def read_range(range_dict: dict) -> domain.scene.ScreenObjectArea:
+    return domain.scene.ScreenObjectArea(
         int(range_dict["col0"]),
         int(range_dict["row0"]),
         int(range_dict["col1"]),

@@ -60,8 +60,8 @@ styles = {
 
 
 def render_png(location: domain.storage.Location, state: domain.rendering.SceneState):
+    #todo: decompose the entire method
     filename = location.frame_file(state.frame, "png")
-    # size=state.profile.resolution
     im = Image.new(
         mode="RGBA", size=state.profile.resolution, color="#3f3f3f"
     )  # todo: add styles, background to the scene file
@@ -73,9 +73,6 @@ def render_png(location: domain.storage.Location, state: domain.rendering.SceneS
         im_layer2 = Image.new(mode="RGBA", size=im.size)
         draw_layer2 = ImageDraw.Draw(im_layer2)
 
-    current_char_x = 0
-    current_char_y = 0
-
     text_size = 15  # todo: style from scene
     font = ImageFont.truetype(
         "fonts/AzeretMono-Medium.ttf", size=text_size
@@ -83,6 +80,18 @@ def render_png(location: domain.storage.Location, state: domain.rendering.SceneS
     (char_left, char_top, char_right, char_bottom) = font.getbbox(text="O")
     char_w = char_right - char_left
     char_h = (char_bottom - char_top) * 1.5
+
+    view_rectangle = (
+        round(state.profile.resolution[0] * state.view.left / 100),
+        round(state.profile.resolution[1] * state.view.top / 100),
+        round(state.profile.resolution[0] * state.view.right / 100),
+        round(state.profile.resolution[1] * state.view.bottom / 100),
+    )
+    if state.profile.is_debug:
+        draw.rectangle(xy=view_rectangle, outline="#bf00ff")  # todo: style - debug color
+
+    current_char_x = view_rectangle[0]
+    current_char_y = view_rectangle[1]
 
     # code
     if not state.code is None:
@@ -103,9 +112,9 @@ def render_png(location: domain.storage.Location, state: domain.rendering.SceneS
                         xy=(current_char_x, current_char_y),
                         text="n",
                         font=font,
-                        fill="#bf00ff",
+                        fill="#bf00ff",  # todo style - debug color
                     )
-                current_char_x = 0
+                current_char_x = view_rectangle[0]
                 current_char_y = current_char_y + char_h
             else:
                 current_char_x = current_char_x + char_w * len(token_value)
@@ -115,20 +124,20 @@ def render_png(location: domain.storage.Location, state: domain.rendering.SceneS
         if state.cursor.is_insert:
             draw.rectangle(
                 xy=(
-                    (state.cursor.pos.col - 1) * char_w,
-                    (state.cursor.pos.row - 1) * char_h - char_h * 0.1,
-                    (state.cursor.pos.col - 1) * char_w + char_w / 4,
-                    (state.cursor.pos.row - 1) * char_h + char_h + char_h * 0.1,
+                    (state.cursor.pos.col - 1) * char_w + view_rectangle[0],
+                    (state.cursor.pos.row - 1) * char_h - char_h * 0.1 + view_rectangle[1],
+                    (state.cursor.pos.col - 1) * char_w + char_w / 4 + view_rectangle[0],
+                    (state.cursor.pos.row - 1) * char_h + char_h + char_h * 0.1 + view_rectangle[1],
                 ),
                 fill="#FFBF00",  # todo: style - cursor color
             )
         else:
             draw.rectangle(
                 xy=(
-                    (state.cursor.pos.col - 1) * char_w,
-                    (state.cursor.pos.row - 1) * char_h - char_h * 0.1,
-                    (state.cursor.pos.col - 1) * char_w + char_w,
-                    (state.cursor.pos.row - 1) * char_h + char_h + char_h * 0.1,
+                    (state.cursor.pos.col - 1) * char_w + view_rectangle[0],
+                    (state.cursor.pos.row - 1) * char_h - char_h * 0.1 + view_rectangle[1],
+                    (state.cursor.pos.col - 1) * char_w + char_w + view_rectangle[0],
+                    (state.cursor.pos.row - 1) * char_h + char_h + char_h * 0.1 + view_rectangle[1],
                 ),
                 fill="#FFBF00",
             )
@@ -136,8 +145,8 @@ def render_png(location: domain.storage.Location, state: domain.rendering.SceneS
                 char = state.code.text[state.cursor.index]
                 draw.text(
                     xy=(
-                        (state.cursor.pos.col - 1) * char_w,
-                        (state.cursor.pos.row - 1) * char_h,
+                        (state.cursor.pos.col - 1) * char_w + view_rectangle[0],
+                        (state.cursor.pos.row - 1) * char_h + view_rectangle[1],
                     ),
                     text=char,
                     font=font,
@@ -153,10 +162,10 @@ def render_png(location: domain.storage.Location, state: domain.rendering.SceneS
         alpha_color = f"{alpha_value:02x}"
         draw_layer2.rounded_rectangle(
             xy=(
-                (obj.screen_area.col0 - 1) * char_w,
-                (obj.screen_area.row0 - 1) * char_h,
-                (obj.screen_area.col1 - 1 + 1) * char_w,
-                (obj.screen_area.row1 - 1 + 1) * char_h,
+                (obj.screen_area.col0 - 1) * char_w + view_rectangle[0],
+                (obj.screen_area.row0 - 1) * char_h + view_rectangle[1],
+                (obj.screen_area.col1 - 1 + 1) * char_w + view_rectangle[0],
+                (obj.screen_area.row1 - 1 + 1) * char_h + view_rectangle[1],
             ),
             radius=round(char_h / 5),  # todo: depends on resolution? char size?
             fill=obj.background_color + alpha_color,

@@ -1,5 +1,7 @@
 # code-narrative
 
+Composes code typing footage
+
 ## Build
 ```shell
 $ pip3 install -r requirements.txt
@@ -20,3 +22,7 @@ $ pip install black
 $ black codenarrative/
 ```
 
+## Usage
+
+```yaml
+```

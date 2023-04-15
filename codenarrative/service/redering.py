@@ -23,7 +23,7 @@ def render(scene: domain.scene.Scene, profile_name: str):
     # sort keyframes by frame number
     scene.timeline.sort(key=lambda k: k.frame)
 
-    state = domain.rendering.SceneState(profile)
+    state = domain.rendering.SceneState(profile, scene.view)
     for keyframe in scene.timeline:
         # render from `frame` till `keyframe.frame`
         # then process keyframe itself

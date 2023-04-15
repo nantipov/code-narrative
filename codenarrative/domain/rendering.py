@@ -21,8 +21,9 @@ class ObjectAnimationState:
 
 
 class SceneState:
-    def __init__(self, profile: domain.scene.Profile):
+    def __init__(self, profile: domain.scene.Profile, view: domain.scene.View):
         self.profile = profile
+        self.view = view
         self.code = domain.scene.Code()
         self.cursor = Cursor()
         self.frame = 0

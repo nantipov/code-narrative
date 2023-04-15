@@ -1,5 +1,3 @@
-settings:
-  duration: 180s
 profiles:
   - name: release
     fps: 60
@@ -18,14 +16,16 @@ profiles:
       width: 640
       height: 480
     debug: true
-area:
-  top: 0
-  left: 0
-  right: 100
-  bottom: 100
+view:
+  top: 1
+  left: 1
+  right: 50
+  bottom: 99
   font-size-px: auto #auto | <number>
 style: #optional
+  base-pygment-style: "style-name"
   background-color: "#3f3f3f"
+  cursor-color: "#ffbf00"
   font-file: filename.ttf
 timeline:
   - keyframe: 0s
