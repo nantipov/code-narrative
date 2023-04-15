@@ -9,8 +9,8 @@ import service.png
 import service.video
 import service.cursor
 
-KEYPRESS_DURATION_MS = 150
-OBJECT_FADE_MS = 1000  # 500
+KEYPRESS_DURATION_MS = 250
+OBJECT_FADE_MS = 1000
 
 
 def render(scene: domain.scene.Scene, profile_name: str):
@@ -45,9 +45,7 @@ def render(scene: domain.scene.Scene, profile_name: str):
 
         if len(keyframe.screen_objects) > 0:
             for obj in keyframe.screen_objects:
-                if (
-                    obj.action == "add" and not obj.id in state.screen_objects
-                ):  # todo: enum
+                if not obj.id in state.screen_objects:  # todo: enum
                     state.screen_objects[
                         obj.id
                     ] = domain.rendering.ObjectAnimationState(obj)
@@ -73,7 +71,6 @@ def render(scene: domain.scene.Scene, profile_name: str):
                     case "remove":
                         del state.screen_objects[obj.id]
 
-    # service.png.render_all_pngs(location, state)
     # todo: compose timeline for a sound track
     # todo: write the sound file (wav or raw), parallel to pngs?
     service.video.render_video(location, state)
@@ -149,8 +146,13 @@ def animate_keypresses(
                     state.cursor.pos.col = state.cursor.pos.col - 1
                 is_max_cols_changed = True
 
-        # duration_f = round(state.profile.fps * KEYPRESS_DURATION_MS / 1000) + keypress_jitter_frames(state)
-        duration_f = 1
+        duration_f = round(
+            state.profile.fps * KEYPRESS_DURATION_MS / 1000
+        ) + keypress_jitter_frames(state)
+
+        if state.profile.is_debug:
+            duration_f = 1
+
         f = 0
         while f < duration_f:
             service.png.render_png(location, state)

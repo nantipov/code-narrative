@@ -6,7 +6,7 @@ class Location:
         return f"{directory}/{file}"
 
     def directory_and_frame_file(self, frame: int, extension: str) -> tuple[str, str]:
-        name = f"{frame:05}"
+        name = f"{frame:06}"
         return self.directory_and_file(name, extension)
 
     def file(self, name: str, extension: str) -> str:

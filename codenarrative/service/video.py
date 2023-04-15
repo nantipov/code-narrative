@@ -4,7 +4,7 @@ import subprocess
 
 
 def render_video(location: domain.storage.Location, state: domain.rendering.SceneState):
-    png_file_mask = location.file("%05d", "png")
+    png_file_mask = location.file("%06d", "png")
     video_file = location.file("out", "mp4")
     subprocess.run(
         [

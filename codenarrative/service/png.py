@@ -1,7 +1,6 @@
 import domain.rendering
 import domain.storage
 import concurrent.futures
-from html2image import Html2Image
 from PIL import Image, ImageDraw, ImageFont
 from pygments.lexers import get_lexer_by_name
 from pygments.token import (
@@ -71,50 +70,11 @@ styles = {
 }
 
 
-def render_all_pngs(
-    location: domain.storage.Location, state: domain.rendering.SceneState
-):
-    (output_dir, _) = location.directory_and_frame_file(0, "png")
-    converter = Html2Image(output_path=output_dir, size=(640, 480))
-
-    ## todo: parameter - max_workers
-    workers_quantity = 10
-    workers = [WorkerData() for _ in range(workers_quantity)]
-
-    html_dir, _ = location.directory_and_file("file", "html")
-    f = 0
-    # while f < min(state.frame, 20): #todo remode debuging limit - 11
-    while f < state.frame:
-        input_file = location.frame_file(f, "html")
-        (_, output_file) = location.directory_and_frame_file(f, "png")
-        worker_index = f % workers_quantity
-        workers[worker_index].input_files.append(input_file)
-        workers[worker_index].output_files.append(output_file)
-        f = f + 1
-
-    # todo: css file
-    # css_file = location.file("main", "css")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=workers_quantity) as pool:
-        for w in workers:
-            f = pool.submit(
-                converter.screenshot,
-                html_file=w.input_files,
-                css_file=f"{html_dir}/main.css",
-                save_as=w.output_files,
-            )
-            w.future(f)
-    concurrent.futures.wait(
-        list(map(lambda w: w.fut, workers)),
-        timeout=None,
-        return_when=concurrent.futures.ALL_COMPLETED,
-    )
-
-
 def render_png(location: domain.storage.Location, state: domain.rendering.SceneState):
     filename = location.frame_file(state.frame, "png")
     # size=state.profile.resolution
     im = Image.new(
-        mode="RGBA", size=(640, 480), color="#3f3f3f"
+        mode="RGBA", size=state.profile.resolution, color="#3f3f3f"
     )  # todo: add styles, background to the scene file
     draw = ImageDraw.Draw(im)
 

@@ -6,7 +6,7 @@ class Profile:
     def __init__(self):
         self.name: str = ""
         self.fps: int = 0
-        self.resolution: tuple[int, int]  # todo: structure?
+        self.resolution: tuple[int, int]
         self.is_debug = False
         self.is_default: bool = False
 
@@ -42,8 +42,6 @@ class Keyframe:
         self.frame: int = 0
         self.code: Code = None
         self.screen_objects: list[ScreenObject] = []
-        # self.highlights: list[Highlight] = []
-        # self.notes: list[Note] = []
 
 
 class Scene:

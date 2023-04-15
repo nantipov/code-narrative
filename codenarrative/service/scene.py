@@ -33,7 +33,10 @@ def read_profiles(scene_dict: dict) -> list[domain.scene.Profile]:
     for p in scene_dict["profiles"]:
         profile = domain.scene.Profile()
         profile.name = str(p["name"])
-        profile.resolution = str(p["resolution"])
+        profile.resolution = (
+            int(p["resolution"]["width"]),
+            int(p["resolution"]["height"]),
+        )
         if "default" in p:
             profile.is_default = bool(p["default"])
         profile.fps = int(p["fps"])

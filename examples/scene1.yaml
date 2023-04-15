@@ -4,10 +4,15 @@ profiles:
   - name: release
     fps: 60
     resolution:
-      width: 1080
-      height: 720
+      width: 1920
+      height: 1080
     default: true
   - name: preview
+    fps: 5
+    resolution:
+      width: 640
+      height: 480
+  - name: debug
     fps: 5
     resolution:
       width: 640
