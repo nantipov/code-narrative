@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class Key(Enum):
     OTHER = 0
     ARROW_LEFT = 1
@@ -10,8 +11,9 @@ class Key(Enum):
     TOGGLE_CURSOR_INSERT = 6
     BACKSPACE = 7
 
+
 class Keypress:
-    def __init__(self, k: Key, c: str = "", aligned_current_column = -1):
+    def __init__(self, k: Key, c: str = "", aligned_current_column=-1):
         self.key = k
         self.char = c
         self.aligned_current_column = aligned_current_column

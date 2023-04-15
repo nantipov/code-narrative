@@ -1,6 +1,7 @@
 import domain.rendering
 import domain.keypress
 
+
 def get_max_cols(text: str) -> list[int]:
     lines: list[int] = []
     col = 1
@@ -20,7 +21,13 @@ def get_max_cols(text: str) -> list[int]:
     lines[len(lines) - 1] = lines[len(lines) - 1] + 1
     return lines
 
-def move_cursor(max_cols: list[int], cursor: domain.rendering.Cursor, key: domain.keypress.Key, current_col: int = -1):
+
+def move_cursor(
+    max_cols: list[int],
+    cursor: domain.rendering.Cursor,
+    key: domain.keypress.Key,
+    current_col: int = -1,
+):
     current_col_effective = cursor.pos.col if current_col == -1 else current_col
     line_max_col = max_cols[cursor.pos.row - 1]
     line_min_index = cursor.index - cursor.pos.col + 1
@@ -31,7 +38,9 @@ def move_cursor(max_cols: list[int], cursor: domain.rendering.Cursor, key: domai
             cursor.pos.row = cursor.pos.row - 1
             new_row_max_col = max_cols[cursor.pos.row - 1]
             cursor.pos.col = min(current_col_effective, new_row_max_col)
-            cursor.index = cursor.index - col_before_rowchange - new_row_max_col + cursor.pos.col
+            cursor.index = (
+                cursor.index - col_before_rowchange - new_row_max_col + cursor.pos.col
+            )
         case domain.keypress.Key.ARROW_DOWN:
             cursor.pos.row = cursor.pos.row + 1
             cursor.pos.col = min(current_col, max_cols[cursor.pos.row - 1])
