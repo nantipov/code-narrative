@@ -3,7 +3,7 @@ class Profile:
         self.name: str = ""
         self.fps: int = 0
         self.resolution: tuple[int, int]
-        self.is_debug = False
+        self.is_debug = False  # todo application parameter, not a profile property?
         self.is_default: bool = False
 
 
