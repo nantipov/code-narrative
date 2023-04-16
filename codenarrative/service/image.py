@@ -1,6 +1,7 @@
 import domain.scene
 import domain.rendering
 import domain.storage
+import service.cursor
 from PIL import Image, ImageDraw, ImageFont
 from pygments.lexers import get_lexer_by_name
 from pygments.token import (
@@ -65,13 +66,6 @@ def create_context(
 ) -> domain.rendering.ImageContext:
     context = domain.rendering.ImageContext(scene, profile)
     view = scene.view
-    text_size = 15  # todo: style from scene
-    context.font = ImageFont.truetype(
-        "fonts/AzeretMono-Medium.ttf", size=text_size
-    )  # todo: assets directory fonts, sounds?
-    (char_left, char_top, char_right, char_bottom) = context.font.getbbox(text="O")
-    context.char_w = char_right - char_left
-    context.char_h = (char_bottom - char_top) * 1.5
 
     context.view_rectangle = (
         round(profile.resolution[0] * view.left / 100),
@@ -79,6 +73,52 @@ def create_context(
         round(profile.resolution[0] * view.right / 100),
         round(profile.resolution[1] * view.bottom / 100),
     )
+
+    char_interline_k = 1.5
+
+    if view.font_size_px_string == "auto":  # todo: extract into method
+        reference_font_size = 10
+        reference_font = ImageFont.truetype(
+            font="fonts/AzeretMono-Medium.ttf", size=reference_font_size
+        )
+        (char_left, char_top, char_right, char_bottom) = reference_font.getbbox(
+            text="O"
+        )
+        reference_char_w = char_right - char_left
+        reference_char_h = char_bottom - char_top
+        ratio_wh = reference_char_h / reference_char_w
+        # find max col and row among all keyframes
+        max_col = 0
+        max_row = 0
+        for text in map(
+            lambda c: c.text,
+            filter(lambda c: not c is None, map(lambda t: t.code, scene.timeline)),
+        ):
+            cols_in_rows = service.cursor.get_max_cols(text)
+            if len(cols_in_rows) > max_row:
+                max_row = len(cols_in_rows)
+            for col in cols_in_rows:
+                if col > max_col:
+                    max_col = col
+
+        width = context.view_rectangle[2] - context.view_rectangle[0]
+        height = context.view_rectangle[3] - context.view_rectangle[1]
+
+        size_h = round(height / max_row / char_interline_k)  # todo k?
+        size_w = round(width / max_col * ratio_wh * 1.2)  # todo why 1.2?
+
+        view.font_size_px = min(size_h, size_w)
+    else:
+        view.font_size_px = int(view.font_size_px_string)
+
+    text_size = view.font_size_px
+    context.font = ImageFont.truetype(
+        "fonts/AzeretMono-Medium.ttf", size=text_size
+    )  # todo: assets directory fonts, sounds?
+    (char_left, char_top, char_right, char_bottom) = context.font.getbbox(text="O")
+    context.char_w = char_right - char_left
+    context.char_h = (char_bottom - char_top) * char_interline_k
+
     return context
 
 

@@ -9,7 +9,7 @@ import service.image
 import service.video
 import service.cursor
 
-KEYPRESS_DURATION_MS = 450
+KEYPRESS_DURATION_MS = 350
 OBJECT_FADE_MS = 1000
 
 

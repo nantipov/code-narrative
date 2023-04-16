@@ -19,7 +19,7 @@ profiles:
 view:
   top: 1
   left: 1
-  right: 50
+  right: 70
   bottom: 99
   font-size-px: auto #auto | <number>
 style: #optional
