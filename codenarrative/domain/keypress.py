@@ -10,6 +10,7 @@ class Key(Enum):
     TOGGLE_CURSOR_REPLACE = 5
     TOGGLE_CURSOR_INSERT = 6
     BACKSPACE = 7
+    DELETE = 8
 
 
 class Keypress:

@@ -94,7 +94,9 @@ def create_context(
             lambda c: c.text,
             filter(lambda c: not c is None, map(lambda t: t.code, scene.timeline)),
         ):
-            cols_in_rows = service.cursor.get_max_cols(text)
+            cols_in_rows = list(
+                map(lambda r: r.max_cols, service.cursor.get_rows_data(text))
+            )
             if len(cols_in_rows) > max_row:
                 max_row = len(cols_in_rows)
             for col in cols_in_rows:
@@ -264,8 +266,8 @@ def draw_screen_objects(
     for _, obj_state in state.screen_objects.items():
         obj = obj_state.obj
         alpha_value = round(
-            obj_state.animation_progress * 128 / 100
-        )  # todo: declare as constant 128-max opactity?
+            obj_state.animation_progress * 110 / 100
+        )  # todo: declare as constant 110-max opactity?
         alpha_color = (
             f"{alpha_value:02x}"  # todo: load as color and then modify alpha channel
         )

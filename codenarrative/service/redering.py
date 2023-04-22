@@ -83,8 +83,8 @@ def animate_keypresses(
     location: domain.storage.Location,
     keypresses: list[domain.keypress.Keypress],
 ):
-    max_cols = service.cursor.get_max_cols(state.code.text)
-    is_max_cols_changed = False
+    rows_data = service.cursor.get_rows_data(state.code.text)
+    is_rows_data_changed = False
     for keypress in keypresses:
         match keypress.key:
             case domain.keypress.Key.OTHER:
@@ -109,14 +109,14 @@ def animate_keypresses(
                     state.cursor.pos.col = 1
                 else:
                     state.cursor.pos.col = state.cursor.pos.col + 1
-                is_max_cols_changed = True
+                is_rows_data_changed = True
 
             case domain.keypress.Key.ARROW_LEFT | domain.keypress.Key.ARROW_RIGHT | domain.keypress.Key.ARROW_UP | domain.keypress.Key.ARROW_DOWN:
-                if is_max_cols_changed:
-                    max_cols = service.cursor.get_max_cols(state.code.text)
-                    is_max_cols_changed = False
+                if is_rows_data_changed:
+                    rows_data = service.cursor.get_rows_data(state.code.text)
+                    is_rows_data_changed = False
                 service.cursor.move_cursor(
-                    max_cols,
+                    rows_data,
                     state.cursor,
                     keypress.key,
                     keypress.aligned_current_column,
@@ -140,13 +140,22 @@ def animate_keypresses(
 
                 state.cursor.index = state.cursor.index - 1
                 if char_to_delete == "\n":
-                    if is_max_cols_changed:
-                        max_cols = service.cursor.get_max_cols(state.code.text)
+                    if is_rows_data_changed:
+                        rows_data = service.cursor.get_rows_data(state.code.text)
                     state.cursor.pos.row = state.cursor.pos.row - 1
-                    state.cursor.pos.col = max_cols[state.cursor.pos.row - 1]
+                    state.cursor.pos.col = rows_data[state.cursor.pos.row - 1].max_cols
                 else:
                     state.cursor.pos.col = state.cursor.pos.col - 1
-                is_max_cols_changed = True
+                is_rows_data_changed = True
+
+            case domain.keypress.Key.DELETE:
+                state.code.text = (
+                    state.code.text[: state.cursor.index]
+                    + state.code.text[state.cursor.index + 1 :]
+                )
+                char_to_delete = state.code.text[state.cursor.index - 1]
+                if char_to_delete == "\n":
+                    is_rows_data_changed = True
 
         duration_f = round(
             image_context.profile.fps * KEYPRESS_DURATION_MS / 1000

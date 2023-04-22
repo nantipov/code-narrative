@@ -40,6 +40,13 @@ class ImageContext:
         self.char_h = 0
 
 
+class TextRowData:
+    def __init__(self, min_index: int, max_index: int, max_cols: int):
+        self.min_index = min_index
+        self.max_index = max_index
+        self.max_cols = max_cols
+
+
 def copy_cursor(cursor: Cursor) -> Cursor:
     c = Cursor()
     c.index = cursor.index
