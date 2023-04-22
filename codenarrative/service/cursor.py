@@ -11,7 +11,7 @@ def get_rows_data(text: str) -> list[domain.rendering.TextRowData]:
         c = text[f]
         if c == "\n":
             text_rows.append(domain.rendering.TextRowData(min_index, f, col))
-            min_index = f
+            min_index = f + 1
             col = 1
         else:
             col = col + 1
