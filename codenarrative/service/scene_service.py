@@ -81,8 +81,7 @@ def read_code(code_dict: dict) -> Code:
 def read_screen_objects(objects: list[dict]) -> list[ScreenObject]:
     screen_objects: list[ScreenObject] = []
     for obj in objects:
-        screen_object = ScreenObject()
-        screen_object.id = obj["id"]
+        screen_object = ScreenObject(obj["id"])
         screen_object.action = obj["action"]
         if screen_object.action == "add":  # todo enum
             screen_object.type = obj["type"]

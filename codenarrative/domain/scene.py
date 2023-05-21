@@ -32,8 +32,8 @@ class ScreenObjectArea:
 
 
 class ScreenObject:
-    def __init__(self):
-        self.id = id
+    def __init__(self, obj_id):
+        self.obj_id = obj_id
         self.type = ""
         self.action = ""
         self.kind = ""

@@ -37,7 +37,7 @@ def render(scene: Scene, profile_name: str):
             state.frame = state.frame + 1
         state.idle = False
 
-        if not keyframe.code is None:
+        if keyframe.code is not None:
             state.code.syntax = keyframe.code.syntax
             text1 = state.code.text
             text2 = keyframe.code.text
@@ -49,12 +49,14 @@ def render(scene: Scene, profile_name: str):
 
         if len(keyframe.screen_objects) > 0:
             for obj in keyframe.screen_objects:
-                if not obj.id in state.screen_objects:  # todo: enum
-                    state.screen_objects[obj.id] = rendering.ObjectAnimationState(obj)
+                if obj.obj_id not in state.screen_objects:  # todo: enum
+                    state.screen_objects[obj.obj_id] = rendering.ObjectAnimationState(
+                        obj
+                    )
             animation_frames = round(OBJECT_FADE_MS / 1000 * profile.fps)
             for object_frame in range(animation_frames + 1):
                 for obj in keyframe.screen_objects:
-                    animation_state = state.screen_objects[obj.id]
+                    animation_state = state.screen_objects[obj.obj_id]
                     match obj.action:
                         case "add":
                             animation_state.animation_progress = round(
@@ -71,7 +73,7 @@ def render(scene: Scene, profile_name: str):
             for obj in keyframe.screen_objects:
                 match obj.action:
                     case "remove":
-                        del state.screen_objects[obj.id]
+                        del state.screen_objects[obj.obj_id]
 
     # todo: compose timeline for a sound track
     # todo: write the sound file (wav or raw), parallel to pngs?
