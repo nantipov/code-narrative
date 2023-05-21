@@ -9,7 +9,7 @@ $ pip3 install -r requirements.txt
 
 ## Run
 ```shell
-$ python3 codenarrative/main.py examples/scene1.yaml 
+$ ./run.sh examples/scene1.yaml 
 ```
 
 ## Notes

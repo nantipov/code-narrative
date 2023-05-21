@@ -1,4 +1,4 @@
-from codenarrative.domain.scene import Scene, ScreenObject, Profile
+from codenarrative.domain.scene import Scene, ScreenObject, Profile, Code
 from PIL import ImageFont
 
 
