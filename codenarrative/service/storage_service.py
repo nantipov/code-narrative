@@ -1,10 +1,10 @@
-import domain.storage
+from codenarrative.domain.storage import Location
 import time
 import pathlib
 
 
-def location() -> domain.storage.Location:
-    loc = domain.storage.Location()
+def location() -> Location:
+    loc = Location()
     directory_name = round(time.time() * 1000)
     loc.directory_name = f"output/{directory_name}"
     pathlib.Path(loc.directory_name).mkdir(parents=True, exist_ok=True)

@@ -1,9 +1,9 @@
-import domain.scene
-import domain.storage
+from codenarrative.domain.scene import Profile
+from codenarrative.domain.storage import Location
 import subprocess
 
 
-def render_video(location: domain.storage.Location, profile: domain.scene.Profile):
+def render_video(location: Location, profile: Profile):
     png_file_mask = location.file("%06d", "png")
     video_file = location.file("out", "mp4")
     subprocess.run(

@@ -1,36 +1,39 @@
-import domain.rendering
-import domain.scene
-import domain.storage
-import domain.keypress
-import service.scene
-import service.storage
-import service.keypress
-import service.image
-import service.video
-import service.cursor
+from codenarrative.domain.rendering import SceneState, ImageContext
+from codenarrative.domain import rendering
+from codenarrative.domain.scene import Scene
+from codenarrative.domain.storage import Location
+from codenarrative.domain.keypress import Keypress, Key
+from codenarrative.service import scene_service
+from codenarrative.service import storage_service
+from codenarrative.service import keypress_service
+from codenarrative.service import image_service
+from codenarrative.service import video_service
+from codenarrative.service import cursor_service
 
 KEYPRESS_DURATION_MS = 350
 OBJECT_FADE_MS = 1000
 
 
-def render(scene: domain.scene.Scene, profile_name: str):
-    profile = service.scene.profile_by_name(scene, profile_name)
-    location = service.storage.location()
+def render(scene: Scene, profile_name: str):
+    profile = scene_service.profile_by_name(scene, profile_name)
+    location = storage_service.location()
 
     # set frame numbers for keyframes
-    for k in scene.timeline:
-        k.frame = service.scene.temporal_in_frames(k.definition, profile.fps)
+    for keyframe in scene.timeline:
+        keyframe.frame = scene_service.temporal_in_frames(
+            keyframe.definition, profile.fps
+        )
     # sort keyframes by frame number
     scene.timeline.sort(key=lambda k: k.frame)
 
-    image_context = service.image.create_context(scene, profile)
-    state = domain.rendering.SceneState()
+    image_context = image_service.create_context(scene, profile)
+    state = SceneState()
     for keyframe in scene.timeline:
         # render from `frame` till `keyframe.frame`
         # then process keyframe itself
         state.idle = True
         while state.frame < keyframe.frame - 1:
-            service.image.render_image(location, image_context, state)
+            image_service.render_image(location, image_context, state)
             state.frame = state.frame + 1
         state.idle = False
 
@@ -38,7 +41,7 @@ def render(scene: domain.scene.Scene, profile_name: str):
             state.code.syntax = keyframe.code.syntax
             text1 = state.code.text
             text2 = keyframe.code.text
-            keyboard_actions = service.keypress.compute_keypresses(
+            keyboard_actions = keypress_service.compute_keypresses(
                 state.cursor, text1, text2
             )
             # todo: check length in frames and print warning if overlaps and supposed to be trimmed
@@ -47,9 +50,7 @@ def render(scene: domain.scene.Scene, profile_name: str):
         if len(keyframe.screen_objects) > 0:
             for obj in keyframe.screen_objects:
                 if not obj.id in state.screen_objects:  # todo: enum
-                    state.screen_objects[
-                        obj.id
-                    ] = domain.rendering.ObjectAnimationState(obj)
+                    state.screen_objects[obj.id] = rendering.ObjectAnimationState(obj)
             animation_frames = round(OBJECT_FADE_MS / 1000 * profile.fps)
             for object_frame in range(animation_frames + 1):
                 for obj in keyframe.screen_objects:
@@ -65,7 +66,7 @@ def render(scene: domain.scene.Scene, profile_name: str):
                                 * 100
                                 / animation_frames
                             )
-                service.image.render_image(location, image_context, state)
+                image_service.render_image(location, image_context, state)
                 state.frame = state.frame + 1
             for obj in keyframe.screen_objects:
                 match obj.action:
@@ -74,20 +75,20 @@ def render(scene: domain.scene.Scene, profile_name: str):
 
     # todo: compose timeline for a sound track
     # todo: write the sound file (wav or raw), parallel to pngs?
-    service.video.render_video(location, profile)
+    video_service.render_video(location, profile)
 
 
 def animate_keypresses(
-    state: domain.rendering.SceneState,
-    image_context: domain.rendering.ImageContext,
-    location: domain.storage.Location,
-    keypresses: list[domain.keypress.Keypress],
+    state: SceneState,
+    image_context: ImageContext,
+    location: Location,
+    keypresses: list[Keypress],
 ):
-    rows_data = service.cursor.get_rows_data(state.code.text)
+    rows_data = cursor_service.get_rows_data(state.code.text)
     is_rows_data_changed = False
     for keypress in keypresses:
         match keypress.key:
-            case domain.keypress.Key.OTHER:
+            case Key.OTHER:
                 if state.cursor.index >= len(state.code.text):
                     state.code.text = state.code.text + keypress.char
                 else:
@@ -111,24 +112,24 @@ def animate_keypresses(
                     state.cursor.pos.col = state.cursor.pos.col + 1
                 is_rows_data_changed = True
 
-            case domain.keypress.Key.ARROW_LEFT | domain.keypress.Key.ARROW_RIGHT | domain.keypress.Key.ARROW_UP | domain.keypress.Key.ARROW_DOWN:
+            case Key.ARROW_LEFT | Key.ARROW_RIGHT | Key.ARROW_UP | Key.ARROW_DOWN:
                 if is_rows_data_changed:
-                    rows_data = service.cursor.get_rows_data(state.code.text)
+                    rows_data = cursor_service.get_rows_data(state.code.text)
                     is_rows_data_changed = False
-                service.cursor.move_cursor(
+                cursor_service.move_cursor(
                     rows_data,
                     state.cursor,
                     keypress.key,
                     keypress.aligned_current_column,
                 )
 
-            case domain.keypress.Key.TOGGLE_CURSOR_REPLACE:
+            case Key.TOGGLE_CURSOR_REPLACE:
                 state.cursor.is_insert = False
 
-            case domain.keypress.Key.TOGGLE_CURSOR_INSERT:
+            case Key.TOGGLE_CURSOR_INSERT:
                 state.cursor.is_insert = True
 
-            case domain.keypress.Key.BACKSPACE:
+            case Key.BACKSPACE:
                 char_to_delete = state.code.text[state.cursor.index - 1]
                 if state.cursor.index >= len(state.code.text):
                     state.code.text = state.code.text[: len(state.code.text) - 1]
@@ -141,14 +142,14 @@ def animate_keypresses(
                 state.cursor.index = state.cursor.index - 1
                 if char_to_delete == "\n":
                     if is_rows_data_changed:
-                        rows_data = service.cursor.get_rows_data(state.code.text)
+                        rows_data = cursor_service.get_rows_data(state.code.text)
                     state.cursor.pos.row = state.cursor.pos.row - 1
                     state.cursor.pos.col = rows_data[state.cursor.pos.row - 1].max_cols
                 else:
                     state.cursor.pos.col = state.cursor.pos.col - 1
                 is_rows_data_changed = True
 
-            case domain.keypress.Key.DELETE:
+            case Key.DELETE:
                 state.code.text = (
                     state.code.text[: state.cursor.index]
                     + state.code.text[state.cursor.index + 1 :]
@@ -166,12 +167,12 @@ def animate_keypresses(
 
         f = 0
         while f < duration_f:
-            service.image.render_image(location, image_context, state)
+            image_service.render_image(location, image_context, state)
             state.frame = state.frame + 1
             f = f + 1
 
 
-def keypress_jitter_frames(state: domain.rendering.SceneState, fps: int) -> int:
+def keypress_jitter_frames(state: SceneState, fps: int) -> int:
     jitter_f = round(fps / 3)
     jitter_chars = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "+", '"', ":"]
 

@@ -1,6 +1,5 @@
 import sys
-import service.scene
-import service.rendering
+from codenarrative.service import scene_service, rendering_service
 
 
 def main():
@@ -12,7 +11,7 @@ def main():
     if len(sys.argv) >= 3:
         profile_name = sys.argv[2]
 
-    service.rendering.render(service.scene.read_scene_file(sys.argv[1]), profile_name)
+    rendering_service.render(scene_service.read_scene_file(sys.argv[1]), profile_name)
 
 
 if __name__ == "__main__":

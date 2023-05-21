@@ -1,4 +1,4 @@
-import domain.scene
+from codenarrative.domain.scene import Scene, ScreenObject, Profile
 from PIL import ImageFont
 
 
@@ -16,14 +16,14 @@ class Cursor:
 
 
 class ObjectAnimationState:
-    def __init__(self, obj: domain.scene.ScreenObject):
+    def __init__(self, obj: ScreenObject):
         self.animation_progress = 0
         self.obj = obj
 
 
 class SceneState:
     def __init__(self):
-        self.code = domain.scene.Code()
+        self.code = Code()
         self.cursor = Cursor()
         self.frame = 0
         self.idle = False
@@ -31,7 +31,7 @@ class SceneState:
 
 
 class ImageContext:
-    def __init__(self, scene: domain.scene.Scene, profile: domain.scene.Profile):
+    def __init__(self, scene: Scene, profile: Profile):
         self.scene = scene
         self.profile = profile
         self.view_rectangle = (0, 0, 0, 0)

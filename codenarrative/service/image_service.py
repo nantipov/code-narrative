@@ -1,7 +1,7 @@
-import domain.scene
-import domain.rendering
-import domain.storage
-import service.cursor
+from codenarrative.domain.scene import Scene, Profile
+from codenarrative.domain.rendering import ImageContext, SceneState
+from codenarrative.domain.storage import Location
+from codenarrative.service import cursor_service
 from PIL import Image, ImageDraw, ImageFont
 from pygments.lexers import get_lexer_by_name
 from pygments.token import (
@@ -61,10 +61,8 @@ styles = {
 }
 
 
-def create_context(
-    scene: domain.scene.Scene, profile: domain.scene.Profile
-) -> domain.rendering.ImageContext:
-    context = domain.rendering.ImageContext(scene, profile)
+def create_context(scene: Scene, profile: Profile) -> ImageContext:
+    context = ImageContext(scene, profile)
     view = scene.view
 
     context.view_rectangle = (
@@ -92,10 +90,10 @@ def create_context(
         max_row = 0
         for text in map(
             lambda c: c.text,
-            filter(lambda c: not c is None, map(lambda t: t.code, scene.timeline)),
+            filter(lambda c: c is not None, map(lambda t: t.code, scene.timeline)),
         ):
             cols_in_rows = list(
-                map(lambda r: r.max_cols, service.cursor.get_rows_data(text))
+                map(lambda r: r.max_cols, cursor_service.get_rows_data(text))
             )
             if len(cols_in_rows) > max_row:
                 max_row = len(cols_in_rows)
@@ -125,9 +123,9 @@ def create_context(
 
 
 def render_image(
-    location: domain.storage.Location,
-    context: domain.rendering.ImageContext,
-    state: domain.rendering.SceneState,
+    location: Location,
+    context: ImageContext,
+    state: SceneState,
 ):
     filename = location.frame_file(state.frame, "png")
     im = Image.new(
@@ -168,11 +166,7 @@ def render_image(
         im_composite.save(filename, "PNG")
 
 
-def draw_code(
-    context: domain.rendering.ImageContext,
-    draw: ImageDraw.Draw,
-    state: domain.rendering.SceneState,
-):
+def draw_code(context: ImageContext, draw: ImageDraw.Draw, state: SceneState):
     current_char_x = context.view_rectangle[0]
     current_char_y = context.view_rectangle[1]
 
@@ -201,11 +195,7 @@ def draw_code(
             current_char_x = current_char_x + context.char_w * len(token_value)
 
 
-def draw_cursor(
-    context: domain.rendering.ImageContext,
-    draw: ImageDraw.Draw,
-    state: domain.rendering.SceneState,
-):
+def draw_cursor(context: ImageContext, draw: ImageDraw.Draw, state: SceneState):
     if not state.idle or state.frame % context.profile.fps > context.profile.fps / 3:
         if state.cursor.is_insert:
             draw.rectangle(
@@ -258,11 +248,7 @@ def draw_cursor(
                 )
 
 
-def draw_screen_objects(
-    context: domain.rendering.ImageContext,
-    draw: ImageDraw.Draw,
-    state: domain.rendering.SceneState,
-):
+def draw_screen_objects(context: ImageContext, draw: ImageDraw.Draw, state: SceneState):
     for _, obj_state in state.screen_objects.items():
         obj = obj_state.obj
         alpha_value = round(
