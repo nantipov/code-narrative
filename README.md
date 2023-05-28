@@ -22,6 +22,11 @@ $ pip install black
 $ black codenarrative/
 ```
 
+Build mappings over keyboard typing audio file
+```shell
+$ python3 codenarrative/key_click_mapper.py
+```
+
 ## Usage
 
 ```yaml
