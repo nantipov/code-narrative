@@ -1,9 +1,10 @@
 from codenarrative.domain.rendering import SceneState, ImageContext
 from codenarrative.domain import rendering
 from codenarrative.domain.scene import Scene
+from codenarrative.domain.sound import SoundContext
 from codenarrative.domain.storage import Location
 from codenarrative.domain.keypress import Keypress, Key
-from codenarrative.service import scene_service
+from codenarrative.service import scene_service, sound_service
 from codenarrative.service import storage_service
 from codenarrative.service import keypress_service
 from codenarrative.service import image_service
@@ -27,6 +28,7 @@ def render(scene: Scene, profile_name: str):
     scene.timeline.sort(key=lambda k: k.frame)
 
     image_context = image_service.create_context(scene, profile)
+    sound_context = sound_service.create_context(location, profile)
     state = SceneState()
     for keyframe in scene.timeline:
         # render from `frame` till `keyframe.frame`
@@ -45,7 +47,9 @@ def render(scene: Scene, profile_name: str):
                 state.cursor, text1, text2
             )
             # todo: check length in frames and print warning if overlaps and supposed to be trimmed
-            animate_keypresses(state, image_context, location, keyboard_actions)
+            animate_keypresses(
+                state, image_context, sound_context, location, keyboard_actions
+            )
 
         if len(keyframe.screen_objects) > 0:
             for obj in keyframe.screen_objects:
@@ -77,12 +81,14 @@ def render(scene: Scene, profile_name: str):
 
     # todo: compose timeline for a sound track
     # todo: write the sound file (wav or raw), parallel to pngs?
+    sound_service.release_files(sound_context)
     video_service.render_video(location, profile)
 
 
 def animate_keypresses(
     state: SceneState,
     image_context: ImageContext,
+    sound_context: SoundContext,
     location: Location,
     keypresses: list[Keypress],
 ):
@@ -166,6 +172,12 @@ def animate_keypresses(
 
         if image_context.profile.is_debug:
             duration_f = 1
+
+        sound_pointer = sound_service.get_sound_pointer(sound_context, keypress)
+        duration_f = max(duration_f, sound_pointer.frames)
+        # todo: peak
+
+        sound_service.append_sound_sample(sound_context, sound_pointer, state.frame)
 
         f = 0
         while f < duration_f:

@@ -9,7 +9,7 @@ $ pip3 install -r requirements.txt
 
 ## Run
 ```shell
-$ ./run.sh examples/scene1.yaml 
+$ ./codenarrative.sh examples/scene1.yaml 
 ```
 
 ## Notes
@@ -24,7 +24,7 @@ $ black codenarrative/
 
 Build mappings over keyboard typing audio file
 ```shell
-$ python3 codenarrative/key_click_mapper.py
+$ ./key_click_mapper.sh
 ```
 
 ## Usage

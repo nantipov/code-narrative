@@ -1,26 +1,11 @@
 import struct
 from typing import BinaryIO, TextIO
 
+from codenarrative.domain.sound import WavFormat
+from codenarrative.service.sound_service import check_format
+
 INPUT_WAV_FILENAME = "sounds/typing_audio.wav"
 OUTPUT_MAPPING_FILENAME = "sounds/typing_audio.csv"
-
-
-class Format:
-    def __init__(
-        self,
-        channels: int,
-        sample_rate: int,
-        bit_per_sample: int,
-        data_chunk_len: int,
-        sample_size: int,
-        unpack_format: str,
-    ):
-        self.channels = channels
-        self.sample_rate = sample_rate
-        self.bit_per_sample = bit_per_sample
-        self.data_chunk_len = data_chunk_len
-        self.sample_size = sample_size
-        self.unpack_format = unpack_format
 
 
 def main():
@@ -30,13 +15,14 @@ def main():
             output_csv.write(
                 f"# channels: {wav_format.channels}, sample rate: {wav_format.sample_rate}, bits per sample: {wav_format.bit_per_sample}\n"
             )
+            output_csv.write(f"# start_pos, max_volume_pos, end_pos\n")
             data_pos = input_wav.tell()
             low, high = find_local_extremes(input_wav, wav_format)
             input_wav.seek(data_pos)  # jump to beginning of data
             print_impulses(input_wav, output_csv, wav_format, low, high)
 
 
-def find_local_extremes(input_wav: BinaryIO, wav_format: Format) -> tuple[int, int]:
+def find_local_extremes(input_wav: BinaryIO, wav_format: WavFormat) -> tuple[int, int]:
     local_area_ms = 100
     local_area_samples = int(wav_format.sample_rate * local_area_ms / 1000)
     least_extreme = -1
@@ -68,13 +54,20 @@ def find_local_extremes(input_wav: BinaryIO, wav_format: Format) -> tuple[int, i
 
 
 def print_impulses(
-    input_wav: BinaryIO, output_csv: TextIO, wav_format: Format, low: int, high: int
+    input_wav: BinaryIO, output_csv: TextIO, wav_format: WavFormat, low: int, high: int
 ):
     shortest_key_press_ms = 100
-    shortest_key_press_ms = int(wav_format.sample_rate * shortest_key_press_ms / 1000)
-    state = 0  # 0 - seek for begin, 1 - see for end
+    shortest_key_press_samples = int(
+        wav_format.sample_rate * shortest_key_press_ms / 1000
+    )
+    shortest_key_press_bytes = (
+        shortest_key_press_samples * wav_format.sample_size * wav_format.channels
+    )
+    state = 0  # 0 - seek for begin, 1 - seek for end
     pos0 = 0
     samples_counter = 0
+    max_volume = 0
+    max_volume_pos = 0
     while all_channels_sample := input_wav.read(
         wav_format.channels * wav_format.sample_size
     ):
@@ -91,60 +84,27 @@ def print_impulses(
         if state == 0 and volume > low:
             state = 1
             pos0 = pos
-        if state == 1 and volume <= low and pos - pos0 >= shortest_key_press_ms:
-            state = 0
-            output_csv.write(f"{pos0},{pos}\n")
+            max_volume = volume
+            max_volume_pos = pos
 
+        area_len = pos - pos0
 
-def check_format(input_wav: BinaryIO) -> Format:
-    format_expect(input_wav.read(4), b"RIFF")
-    # skip 8 bytes (size) from the current position (__whence=1)
-    input_wav.seek(4, 1)
-    format_expect(input_wav.read(7), b"WAVEfmt")
-    # skip 1 byte (fmt trailing null) from the current position (__whence=1)
-    input_wav.seek(1, 1)
-    # skip 4 bytes (size) from the current position (__whence=1)
-    input_wav.seek(4, 1)
-    format_expect(input_wav.read(2), b"\x01\x00")  # 1 PCM (non compressed)
+        if state == 1:
+            if volume > max_volume:
+                max_volume = volume
+                max_volume_pos = pos
 
-    channels = struct.unpack("<H", input_wav.read(2))[0]
-    sample_rate = struct.unpack("<I", input_wav.read(4))[0]
-
-    # skip 4 bytes (size) from the current position (__whence=1)
-    input_wav.seek(4 + 2, 1)
-    bit_per_sample = struct.unpack("<H", input_wav.read(2))[0]
-    format_expect(input_wav.read(4), b"data")
-    data_chunk_len = struct.unpack("<I", input_wav.read(4))[0]
-
-    sample_size = int(bit_per_sample / 8)
-    unpack_format = ""
-    if sample_size == 1:
-        unpack_format = "B"  # unsigned
-    elif sample_size == 2:
-        unpack_format = "h"  # signed
-    else:
-        raise AssertionError(f"unsupported sample size {sample_size}, supported: 1, 2")
-    return Format(
-        channels,
-        sample_rate,
-        bit_per_sample,
-        data_chunk_len,
-        sample_size,
-        unpack_format,
-    )
-
-
-def format_expect(actual, expected):
-    if actual != expected:
-        raise AssertionError(
-            f"unsupported file format: piece: expected '{expected}', actual '{actual}'"
-        )
+            if area_len >= shortest_key_press_bytes and abs(volume - low) <= low / 2:
+                state = 0
+                # consider as a good click area if max_volume_pos is somewhere in the middle
+                max_volume_relative_pos = max_volume_pos - pos0
+                max_volume_ratio_pos = max_volume_relative_pos / area_len
+                # output_csv.write(
+                #     f"#{pos0},{max_volume_pos},{pos},{max_volume_ratio_pos}\n"
+                # )
+                if area_len > 0 and 0.3 <= max_volume_ratio_pos <= 0.8:
+                    output_csv.write(f"{pos0},{max_volume_pos},{pos}\n")
 
 
 if __name__ == "__main__":
     main()
-
-# https://en.wikipedia.org/wiki/WAV
-# https://de.wikipedia.org/wiki/RIFF_WAVE
-# https://docs.fileformat.com/audio/wav/
-# https://www.joenord.com/audio-wav-file-format/

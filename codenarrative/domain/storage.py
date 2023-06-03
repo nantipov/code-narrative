@@ -14,4 +14,4 @@ class Location:
         return f"{directory}/{file}"
 
     def directory_and_file(self, name: str, extension: str) -> tuple[str, str]:
-        return (f"{self.directory_name}/{extension}", f"{name}.{extension}")
+        return f"{self.directory_name}/{extension}", f"{name}.{extension}"

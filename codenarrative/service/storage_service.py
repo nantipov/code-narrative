@@ -10,4 +10,5 @@ def location() -> Location:
     pathlib.Path(loc.directory_name).mkdir(parents=True, exist_ok=True)
     pathlib.Path(loc.directory_name + "/png").mkdir(parents=True, exist_ok=True)
     pathlib.Path(loc.directory_name + "/mp4").mkdir(parents=True, exist_ok=True)
+    pathlib.Path(loc.directory_name + "/wav").mkdir(parents=True, exist_ok=True)
     return loc
