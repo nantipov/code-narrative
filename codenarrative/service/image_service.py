@@ -1,9 +1,11 @@
+from pygments.lexer import Lexer
+
 from codenarrative.domain.scene import Scene, Profile
 from codenarrative.domain.rendering import ImageContext, SceneState
 from codenarrative.domain.storage import Location
 from codenarrative.service import cursor_service
 from PIL import Image, ImageDraw, ImageFont
-from pygments.lexers import get_lexer_by_name
+from pygments.lexers import get_lexer_by_name, load_lexer_from_file
 from pygments.token import (
     Token,
     Name,
@@ -144,7 +146,7 @@ def render_image(
             xy=context.view_rectangle, outline="#bf00ff"
         )  # todo: style - debug color
 
-    if not state.code is None:
+    if state.code is not None:
         draw_code(context, draw, state)
 
     draw_cursor(context, draw, state)
@@ -170,7 +172,7 @@ def draw_code(context: ImageContext, draw: ImageDraw.Draw, state: SceneState):
     current_char_x = context.view_rectangle[0]
     current_char_y = context.view_rectangle[1]
 
-    lexer = get_lexer_by_name(state.code.syntax, stripall=True)
+    lexer = load_lexer(state.code.syntax)
     for token_type, token_value in lexer.get_tokens(text=state.code.text):
         if token_value != "\n":
             draw.text(
@@ -283,3 +285,10 @@ def token_color(token_type: _TokenType) -> str:
         return styles[token_type]
     else:
         return "#ffffff"  # todo: settings - default color
+
+
+def load_lexer(syntax: str) -> Lexer:
+    if syntax == "openscad":
+        return load_lexer_from_file("codenarrative/openscadlexer.py", "OpenScadLexer")
+    else:
+        return get_lexer_by_name(syntax, stripall=True)
