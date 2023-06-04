@@ -84,7 +84,7 @@ def check_format(input_wav: BinaryIO) -> WavFormat:
     format_expect(input_wav.read(4), b"RIFF")
     # skip 8 bytes (size) from the current position (__whence=1)
     input_wav.seek(4, 1)
-    format_expect(input_wav.read(7), b"WAVEfmt ")
+    format_expect(input_wav.read(8), b"WAVEfmt ")
 
     # skip 4 bytes (fmt chunk size) from the current position (__whence=1)
     input_wav.seek(4, 1)
@@ -160,6 +160,7 @@ def get_sound_pointer(context: SoundContext, keypress: Keypress) -> KeySoundPoin
 def append_sound_sample(
     context: SoundContext, pointer: KeySoundPointer, current_frame: int
 ):
+    # align to the current frame with blocks of silence
     silence_samples_number = frames_to_samples(
         context, current_frame - context.current_frame
     )
@@ -167,7 +168,12 @@ def append_sound_sample(
         silence_sample_buf = silence_sample(context)
         for i in range(silence_samples_number):
             context.output_wav_file.write(silence_sample_buf)
-            context.data_size = context.data_size + len(silence_sample_buf)
+        context.data_size = (
+            context.data_size + len(silence_sample_buf) * silence_samples_number
+        )
+    context.current_frame = current_frame
+
+    # write sound sample
     bytes_left = pointer.end_pos - pointer.begin_pos
     context.input_wav_file.seek(pointer.begin_pos)
     while bytes_left > 0:
