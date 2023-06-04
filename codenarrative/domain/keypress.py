@@ -18,3 +18,6 @@ class Keypress:
         self.key = k
         self.char = c
         self.aligned_current_column = aligned_current_column
+
+    def __repr__(self):
+        return f"{self.key.name} : {self.char} : {self.aligned_current_column}"

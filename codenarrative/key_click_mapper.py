@@ -23,7 +23,7 @@ def main():
 
 
 def find_local_extremes(input_wav: BinaryIO, wav_format: WavFormat) -> tuple[int, int]:
-    local_area_ms = 100
+    local_area_ms = 50
     local_area_samples = int(wav_format.sample_rate * local_area_ms / 1000)
     least_extreme = -1
     most_extreme = 0
@@ -56,7 +56,7 @@ def find_local_extremes(input_wav: BinaryIO, wav_format: WavFormat) -> tuple[int
 def print_impulses(
     input_wav: BinaryIO, output_csv: TextIO, wav_format: WavFormat, low: int, high: int
 ):
-    shortest_key_press_ms = 100
+    shortest_key_press_ms = 50  # 35
     shortest_key_press_samples = int(
         wav_format.sample_rate * shortest_key_press_ms / 1000
     )
@@ -97,12 +97,17 @@ def print_impulses(
             if area_len >= shortest_key_press_bytes and abs(volume - low) <= low / 2:
                 state = 0
                 # consider as a good click area if max_volume_pos is somewhere in the middle
+                # and max_volume is in a certain range comparing to the highest peak in the entire file
                 max_volume_relative_pos = max_volume_pos - pos0
                 max_volume_ratio_pos = max_volume_relative_pos / area_len
                 # output_csv.write(
                 #     f"#{pos0},{max_volume_pos},{pos},{max_volume_ratio_pos}\n"
                 # )
-                if area_len > 0 and 0.3 <= max_volume_ratio_pos <= 0.8:
+                if (
+                    area_len > 0
+                    and 0.3 <= max_volume_ratio_pos <= 0.8
+                    and high * 0.45 <= max_volume <= high * 0.75  # >= 0.65
+                ):
                     output_csv.write(f"{pos0},{max_volume_pos},{pos}\n")
 
 

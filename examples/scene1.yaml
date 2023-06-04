@@ -6,7 +6,7 @@ profiles:
       height: 1080
     default: true
   - name: preview
-    fps: 5
+    fps: 24
     resolution:
       width: 640
       height: 480
@@ -28,7 +28,7 @@ style: #optional
   cursor-color: "#ffbf00"
   font-file: filename.ttf
 timeline:
-  - keyframe: 0s
+  - keyframe: 2s
     code:
       syntax: java
       text: |

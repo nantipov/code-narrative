@@ -114,7 +114,7 @@ def temporal_in_frames(temporal_definition: str, fps: int = 60) -> int:
     elif unit == "f":
         return int(value)
     else:
-        raise BaseException("unrecognized definition " + temporal_definition)
+        raise Exception("unrecognized definition " + temporal_definition)
 
 
 def profile_by_name(scene: Scene, profile_name: str) -> Profile:

@@ -142,10 +142,11 @@ def mapping_line_to_pointer(
     peak_at = int(pointer_data[1].strip())
     end = int(pointer_data[2].strip())
     all_samples = int((end - begin) / wav_format.channels / wav_format.sample_size)
+    # todo: read all_samples from the mapping file?
     peak_sample = int((peak_at - begin) / wav_format.channels / wav_format.sample_size)
     frames = max(int(fps * all_samples / wav_format.sample_rate), 1)
     peak_frame = max(int(fps * peak_sample / wav_format.sample_rate), 1)
-    return KeySoundPointer(begin, peak_at, end, frames, peak_frame)
+    return KeySoundPointer(begin, peak_at, end, frames, peak_frame, all_samples)
 
 
 def get_sound_pointer(context: SoundContext, keypress: Keypress) -> KeySoundPointer:
@@ -154,6 +155,7 @@ def get_sound_pointer(context: SoundContext, keypress: Keypress) -> KeySoundPoin
         keypress.key.value if keypress.key != Key.OTHER else ord(keypress.char.lower())
     )
     pos = key_number % pointers_len
+    print(f"pointer #{pos}")
     return context.key_sound_pointers[pos]
 
 
@@ -161,8 +163,8 @@ def append_sound_sample(
     context: SoundContext, pointer: KeySoundPointer, current_frame: int
 ):
     # align to the current frame with blocks of silence
-    silence_samples_number = frames_to_samples(
-        context, current_frame - context.current_frame
+    silence_samples_number = (
+        frames_to_samples(context, current_frame) - context.current_sample
     )
     if silence_samples_number > 0:
         silence_sample_buf = silence_sample(context)
@@ -171,6 +173,10 @@ def append_sound_sample(
         context.data_size = (
             context.data_size + len(silence_sample_buf) * silence_samples_number
         )
+        context.current_sample = context.current_sample + silence_samples_number
+    elif silence_samples_number < 0:
+        print("WARNING!!! Overlap sound")
+
     context.current_frame = current_frame
 
     # write sound sample
@@ -181,6 +187,7 @@ def append_sound_sample(
         context.output_wav_file.write(context.input_wav_file.read(buf_size))
         context.data_size = context.data_size + buf_size
         bytes_left = bytes_left - buf_size
+    context.current_sample = context.current_sample + pointer.samples
     context.current_frame = context.current_frame + pointer.frames
 
 

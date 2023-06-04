@@ -21,13 +21,20 @@ class WavFormat:
 
 class KeySoundPointer:
     def __init__(
-        self, begin_pos: int, peak_pos: int, end_pos: int, frames: int, peak_frame: int
+        self,
+        begin_pos: int,
+        peak_pos: int,
+        end_pos: int,
+        frames: int,
+        peak_frame: int,
+        samples: int,
     ):
         self.begin_pos = begin_pos
         self.peak_pos = peak_pos
         self.end_pos = end_pos
         self.frames = frames
         self.peak_frame = peak_frame
+        self.samples = samples
 
 
 class SoundContext:
@@ -40,6 +47,7 @@ class SoundContext:
         key_sound_pointers: list[KeySoundPointer],
     ):
         self.current_frame = 0
+        self.current_sample = 0
         self.data_size = 0
         self.fps = fps
         self.input_wav_file = input_wav_file

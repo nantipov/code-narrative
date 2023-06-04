@@ -11,7 +11,7 @@ from codenarrative.service import image_service
 from codenarrative.service import video_service
 from codenarrative.service import cursor_service
 
-KEYPRESS_DURATION_MS = 350
+KEYPRESS_DURATION_MS = 150
 OBJECT_FADE_MS = 1000
 
 
@@ -34,7 +34,7 @@ def render(scene: Scene, profile_name: str):
         # render from `frame` till `keyframe.frame`
         # then process keyframe itself
         state.idle = True
-        while state.frame < keyframe.frame - 1:
+        while state.frame < keyframe.frame:
             image_service.render_image(location, image_context, state)
             state.frame = state.frame + 1
         state.idle = False
@@ -79,8 +79,6 @@ def render(scene: Scene, profile_name: str):
                     case "remove":
                         del state.screen_objects[obj.obj_id]
 
-    # todo: compose timeline for a sound track
-    # todo: write the sound file (wav or raw), parallel to pngs?
     sound_service.release_files(sound_context)
     video_service.render_video(location, profile)
 
