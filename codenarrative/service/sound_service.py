@@ -155,7 +155,6 @@ def get_sound_pointer(context: SoundContext, keypress: Keypress) -> KeySoundPoin
         keypress.key.value if keypress.key != Key.OTHER else ord(keypress.char.lower())
     )
     pos = key_number % pointers_len
-    print(f"pointer #{pos}")
     return context.key_sound_pointers[pos]
 
 
