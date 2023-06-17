@@ -1,2 +1,2 @@
 #!/usr/bin/env sh
-PYTHONPATH=. python codenarrative/main.py $*
+PYTHONPATH=. python3 codenarrative/main.py $*
