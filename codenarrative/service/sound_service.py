@@ -6,9 +6,10 @@ from codenarrative.domain.sound import SoundContext, WavFormat, KeySoundPointer
 from typing import BinaryIO
 
 from codenarrative.domain.storage import Location
+from codenarrative.service import storage_service
 
-INPUT_WAV_FILENAME = "sounds/typing_audio.wav"
-MAPPING_FILENAME = "sounds/typing_audio.csv"
+INPUT_WAV_FILENAME = storage_service.app_file("sounds/typing_audio.wav")
+MAPPING_FILENAME = storage_service.app_file("sounds/typing_audio.csv")
 
 OUTPUT_WAV_FILENAME_NO_EXTENSION = "audio"
 

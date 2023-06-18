@@ -5,13 +5,12 @@ RUN apt-get update && \
 
 RUN mkdir -p /app
 
-COPY codenarrative /app
+COPY codenarrative /app/codenarrative
+COPY fonts /app/fonts
+COPY sounds /app/sounds
+
 COPY requirements.txt /app
+COPY codenarrative.sh /app
 
 RUN pip install -r app/requirements.txt
-
-ENV PYTHONPATH=/app
-
-RUN echo '#!/usr/bin/env sh' > /app/codenarrative.sh && \
-    echo 'python3 /app/codenarrative/main.py $*' >> /app/codenarrative.sh
 

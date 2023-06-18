@@ -1,2 +1,7 @@
 #!/usr/bin/env sh
-PYTHONPATH=. python3 codenarrative/main.py $*
+
+# Absolute path to this script
+SCRIPT=$(readlink -f "$0")
+SCRIPTPATH=$(dirname "$SCRIPT")
+
+PYTHONPATH="${SCRIPTPATH}" python3 "${SCRIPTPATH}/codenarrative/main.py" $*

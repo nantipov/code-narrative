@@ -3,7 +3,7 @@ from pygments.lexer import Lexer
 from codenarrative.domain.scene import Scene, Profile
 from codenarrative.domain.rendering import ImageContext, SceneState
 from codenarrative.domain.storage import Location
-from codenarrative.service import cursor_service
+from codenarrative.service import cursor_service, storage_service
 from PIL import Image, ImageDraw, ImageFont
 from pygments.lexers import get_lexer_by_name, load_lexer_from_file
 from pygments.token import (
@@ -79,7 +79,8 @@ def create_context(scene: Scene, profile: Profile) -> ImageContext:
     if view.font_size_px_string == "auto":  # todo: extract into method
         reference_font_size = 10
         reference_font = ImageFont.truetype(
-            font="fonts/AzeretMono-Medium.ttf", size=reference_font_size
+            font=storage_service.app_file("fonts/AzeretMono-Medium.ttf"),
+            size=reference_font_size,
         )
         (char_left, char_top, char_right, char_bottom) = reference_font.getbbox(
             text="O"
@@ -115,7 +116,7 @@ def create_context(scene: Scene, profile: Profile) -> ImageContext:
 
     text_size = view.font_size_px
     context.font = ImageFont.truetype(
-        "fonts/AzeretMono-Medium.ttf", size=text_size
+        storage_service.app_file("fonts/AzeretMono-Medium.ttf"), size=text_size
     )  # todo: assets directory fonts, sounds?
     (char_left, char_top, char_right, char_bottom) = context.font.getbbox(text="O")
     context.char_w = char_right - char_left
@@ -289,6 +290,8 @@ def token_color(token_type: _TokenType) -> str:
 
 def load_lexer(syntax: str) -> Lexer:
     if syntax == "openscad":
-        return load_lexer_from_file("codenarrative/openscadlexer.py", "OpenScadLexer")
+        return load_lexer_from_file(
+            storage_service.app_file("codenarrative/openscadlexer.py"), "OpenScadLexer"
+        )
     else:
         return get_lexer_by_name(syntax, stripall=True)
