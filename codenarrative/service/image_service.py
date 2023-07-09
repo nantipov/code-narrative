@@ -173,29 +173,34 @@ def draw_code(context: ImageContext, draw: ImageDraw.Draw, state: SceneState):
     current_char_x = context.view_rectangle[0]
     current_char_y = context.view_rectangle[1]
 
-    lexer = load_lexer(state.code.syntax)
+    lexer = load_lexer(state.code.syntax)  # todo: preload lexers on context creation
     for token_type, token_value in lexer.get_tokens(text=state.code.text):
-        if token_value != "\n":
+        for token_line in token_value.splitlines(keepends=True):
+            ends_new_line = token_line.endswith("\n")
+            token_one_line = token_line.rstrip("\n")
             draw.text(
                 xy=(current_char_x, current_char_y),
-                text=token_value,
+                text=token_one_line,
                 font=context.font,
                 fill=token_color(token_type),
             )
 
-        if token_value == "\n":
-            # new line symbol debug
-            if context.profile.is_debug:
-                draw.text(
-                    xy=(current_char_x, current_char_y),
-                    text="n",
-                    font=context.font,
-                    fill="#bf00ff",  # todo style - debug color
-                )
-            current_char_x = context.view_rectangle[0]
-            current_char_y = current_char_y + context.char_h
-        else:
-            current_char_x = current_char_x + context.char_w * len(token_value)
+            if ends_new_line:
+                # new line symbol debug
+                if context.profile.is_debug:
+                    draw.text(
+                        xy=(
+                            current_char_x + context.char_w * len(token_one_line),
+                            current_char_y,
+                        ),
+                        text="n",
+                        font=context.font,
+                        fill="#bf00ff",  # todo style - debug color
+                    )
+                current_char_x = context.view_rectangle[0]
+                current_char_y = current_char_y + context.char_h
+            else:
+                current_char_x = current_char_x + context.char_w * len(token_one_line)
 
 
 def draw_cursor(context: ImageContext, draw: ImageDraw.Draw, state: SceneState):
@@ -236,7 +241,7 @@ def draw_cursor(context: ImageContext, draw: ImageDraw.Draw, state: SceneState):
                 ),
                 fill="#FFBF00",
             )
-            if not state.code is None:
+            if state.code is not None and state.cursor.index < len(state.code.text):
                 char = state.code.text[state.cursor.index]
                 draw.text(
                     xy=(

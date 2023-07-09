@@ -61,13 +61,13 @@ def compute_keypresses(init_cursor: Cursor, text1: str, text2: str) -> list[Keyp
                 characters_to_delete = code.i2 - code.i1
                 for f in range(characters_to_delete):
                     i = code.i2 - f
+                    char = text[i]
                     text = text[:i] + text[i + 1 :]
                     keypresses.append(Keypress(Key.BACKSPACE))
                     cursor.index = cursor.index - 1
-                    char = text[i]
                     if char == "\n":
                         cursor.pos.row = cursor.pos.row - 1
-                        cursor.pos.col = rows_data[cursor.pos.row - 1]
+                        cursor.pos.col = rows_data[cursor.pos.row - 1].max_cols
                     else:
                         cursor.pos.col = cursor.pos.col - 1
                 for patch_code in codes:
