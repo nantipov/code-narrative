@@ -34,10 +34,10 @@ class ImageContext:
     def __init__(self, scene: Scene, profile: Profile):
         self.scene = scene
         self.profile = profile
-        self.view_rectangle = (0, 0, 0, 0)
+        self.view_rectangle = (0.0, 0.0, 0.0, 0.0)
         self.font: ImageFont = None
-        self.char_w = 0
-        self.char_h = 0
+        self.char_w = 0.0
+        self.char_h = 0.0
 
 
 class TextRowData:

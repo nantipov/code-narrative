@@ -147,12 +147,14 @@ def render_image(
             xy=context.view_rectangle, outline="#bf00ff"
         )  # todo: style - debug color
 
+    token_lines = list()
+
     if state.code is not None:
-        draw_code(context, draw, state)
+        token_lines = draw_code_get_tokens(context, draw, state)
 
-    draw_cursor(context, draw, state)
+    draw_cursor(context, draw, state, token_lines)
 
-    draw_screen_objects(context, draw_layer2, state)
+    draw_screen_objects(context, draw_layer2, state)  # todo: consider `lines`
 
     # cursor position debug
     if context.profile.is_debug:
@@ -169,7 +171,12 @@ def render_image(
         im_composite.save(filename, "PNG")
 
 
-def draw_code(context: ImageContext, draw: ImageDraw.Draw, state: SceneState):
+def draw_code_get_tokens(
+    context: ImageContext, draw: ImageDraw.Draw, state: SceneState
+) -> list[list[str]]:
+    lines = list()
+    line_tokens = list()
+
     current_char_x = context.view_rectangle[0]
     current_char_y = context.view_rectangle[1]
 
@@ -178,78 +185,89 @@ def draw_code(context: ImageContext, draw: ImageDraw.Draw, state: SceneState):
         for token_line in token_value.splitlines(keepends=True):
             ends_new_line = token_line.endswith("\n")
             token_one_line = token_line.rstrip("\n")
+            line_tokens.append(token_one_line)
             draw.text(
                 xy=(current_char_x, current_char_y),
                 text=token_one_line,
                 font=context.font,
                 fill=token_color(token_type),
             )
+            (chars_left, chars_top, chars_right, chars_bottom) = context.font.getbbox(
+                text=token_one_line
+            )
+
+            token_line_w = chars_right - chars_left
+
+            if context.profile.is_debug:
+                # tokens in rectangles
+                draw.rectangle(
+                    xy=(
+                        current_char_x,
+                        current_char_y,
+                        current_char_x + token_line_w,
+                        current_char_y + context.char_h,
+                    ),
+                    outline="#bf00ff",  # todo style - debug color
+                )
 
             if ends_new_line:
                 # new line symbol debug
                 if context.profile.is_debug:
                     draw.text(
                         xy=(
-                            current_char_x + context.char_w * len(token_one_line),
+                            current_char_x + token_line_w,
                             current_char_y,
                         ),
                         text="n",
                         font=context.font,
                         fill="#bf00ff",  # todo style - debug color
                     )
-                current_char_x = context.view_rectangle[0]
+
+                current_char_x = float(context.view_rectangle[0])
                 current_char_y = current_char_y + context.char_h
+                lines.append(line_tokens)
+                line_tokens = list()
             else:
-                current_char_x = current_char_x + context.char_w * len(token_one_line)
+                current_char_x = current_char_x + token_line_w
+    lines.append(line_tokens)
+    return lines
 
 
-def draw_cursor(context: ImageContext, draw: ImageDraw.Draw, state: SceneState):
+def draw_cursor(
+    context: ImageContext,
+    draw: ImageDraw.Draw,
+    state: SceneState,
+    token_lines: list[list[str]],
+):
     if not state.idle or state.frame % context.profile.fps > context.profile.fps / 3:
+        (x, y) = get_xy(
+            context, token_lines, state.cursor.pos.col, state.cursor.pos.row
+        )
+
         if state.cursor.is_insert:
             draw.rectangle(
                 xy=(
-                    (state.cursor.pos.col - 1) * context.char_w
-                    + context.view_rectangle[0],
-                    (state.cursor.pos.row - 1) * context.char_h
-                    - context.char_h * 0.1
-                    + context.view_rectangle[1],
-                    (state.cursor.pos.col - 1) * context.char_w
-                    + context.char_w / 4
-                    + context.view_rectangle[0],
-                    (state.cursor.pos.row - 1) * context.char_h
-                    + context.char_h
-                    + context.char_h * 0.1
-                    + context.view_rectangle[1],
+                    x,
+                    y - context.char_h * 0.1,
+                    x + context.char_w / 4,
+                    y + context.char_h * 1.1,
                 ),
                 fill="#FFBF00",  # todo: style - cursor color
             )
         else:
             draw.rectangle(
                 xy=(
-                    (state.cursor.pos.col - 1) * context.char_w
-                    + context.view_rectangle[0],
-                    (state.cursor.pos.row - 1) * context.char_h
-                    - context.char_h * 0.1
-                    + context.view_rectangle[1],
-                    (state.cursor.pos.col - 1) * context.char_w
-                    + context.char_w
-                    + context.view_rectangle[0],
-                    (state.cursor.pos.row - 1) * context.char_h
-                    + context.char_h
-                    + context.char_h * 0.1
-                    + context.view_rectangle[1],
+                    x,
+                    y - context.char_h * 0.1,
+                    x + context.char_w,
+                    y + context.char_h * 1.1,
                 ),
                 fill="#FFBF00",
             )
             if state.code is not None and state.cursor.index < len(state.code.text):
                 char = state.code.text[state.cursor.index]
                 draw.text(
-                    xy=(
-                        (state.cursor.pos.col - 1) * context.char_w
-                        + context.view_rectangle[0],
-                        (state.cursor.pos.row - 1) * context.char_h
-                        + context.view_rectangle[1],
-                    ),
+                    xy=(x, y),
                     text=char,
                     font=context.font,
                     fill="#3f3f3f",  # todo: background color
@@ -283,6 +301,46 @@ def draw_screen_objects(context: ImageContext, draw: ImageDraw.Draw, state: Scen
                 xy=(100, 400),
                 text=f"progress: {obj_state.animation_progress}; alpha: {alpha_value} : {obj.background_color + alpha_color}",
                 fill="#ffffff",
+            )
+
+
+def get_xy(
+    context: ImageContext, token_lines: list[list[str]], col: int, row: int
+) -> (float, float):
+    if col < 2 or len(token_lines) < row:
+        return (
+            context.char_w * (col - 1) + context.view_rectangle[0],
+            context.char_h * (row - 1) + context.view_rectangle[1],
+        )
+
+    tokens = token_lines[row - 1]
+    chars_len = 0.0
+    c = 0
+    for token in tokens:
+        # col - 1: position left to the cursor (-1)
+        if c + len(token) < col - 1:
+            (chars_left, chars_top, chars_right, chars_bottom) = context.font.getbbox(
+                text=token
+            )
+            chars_len = chars_len + chars_right - chars_left
+            c = c + len(token)
+        else:
+            # col - 1: position left to the cursor (-1)
+            tail = col - 1 - c
+            (chars_left, chars_top, chars_right, chars_bottom) = context.font.getbbox(
+                text=token[: tail + 1]
+            )
+            (
+                kerning_char_left,
+                kerning_char_top,
+                kerning_char_right,
+                kerning_char_bottom,
+            ) = context.font.getbbox(text=token[tail : tail + 1])
+            extra_kerning_char_len = kerning_char_right - kerning_char_left
+            chars_len = chars_len + (chars_right - chars_left) - extra_kerning_char_len
+            return (
+                chars_len + context.view_rectangle[0],
+                context.char_h * (row - 1) + context.view_rectangle[1],
             )
 
 
