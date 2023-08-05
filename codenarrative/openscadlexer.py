@@ -1,22 +1,38 @@
-from pygments.lexer import RegexLexer, bygroups
-from pygments.token import *
+"""
+    pygments.lexers.openscad
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Lexers for the OpenSCAD languages.
+
+    :copyright: Copyright 2006-2023 by the Pygments team, see AUTHORS.
+    :license: BSD, see LICENSE for details.
+"""
+
+from pygments.lexer import RegexLexer, bygroups, words, include
+from pygments.token import Text, Comment, Punctuation, Operator, Keyword, Name, Number, Whitespace, Literal, String
+
+__all__ = ['OpenScadLexer']
 
 
 class OpenScadLexer(RegexLexer):
+    """For openSCAD code.
+
+    .. versionadded:: 2.16.0
+    """
     name = "OpenSCAD"
+    url = "https://openscad.org/"
     aliases = ["openscad"]
     filenames = ["*.scad"]
+    mimetypes = ["application/x-openscad"]
 
     tokens = {
         "root": [
-            (r"[^\S\n]+", Text),
-            (r"\n", Text),
-            (r"//(\n|[\w\W]*?[^\\]\n)", Comment.Singleline),  # CommentSingle?
-            (r"/(\\\n)?[*][\w\W]*?[*](\\\n)?/", Comment.Mutliline),  # CommentMultiline
-            (r"/(\\\n)?[*][\w\W]*", Comment.Mutliline),  # CommentMultiline
+            (r"[^\S\n]+", Whitespace),
+            (r'//', Comment.Single, 'comment-single'),
+            (r'/\*', Comment.Multiline, 'comment-multi'),
             (r"[{}\[\]\(\),;:]", Punctuation),
             (r"[*!#%\-+=?/]", Operator),
-            (r"&lt;|&lt;=|==|!=|&gt;=|&gt;|&amp;&amp;|\|\|", Operator),
+            (r"<=|<|==|!=|>=|>|&&|\|\|", Operator),
             (r"\$(f[asn]|t|vp[rtd]|children)", Operator),
             (r"(undef|PI)\b", Keyword.Constant),
             (
@@ -24,32 +40,58 @@ class OpenScadLexer(RegexLexer):
                 bygroups(Keyword.Namespace, Text),
                 "includes",
             ),
-            (
-                r"(module)(\s*)([^\s\(]+)",
-                bygroups(Keyword.Namespace, Text, Name.Namespace),
+            (r"(module)(\s*)([^\s\(]+)",
+             bygroups(Keyword.Namespace, Whitespace, Name.Namespace)),
+            (r"(function)(\s*)([^\s\(]+)",
+             bygroups(Keyword.Declaration, Whitespace, Name.Function)),
+            (words(("true", "false"), prefix=r"\b", suffix=r"\b"), Literal),
+            (words((
+                "function", "module", "include", "use", "for",
+                "intersection_for", "if", "else", "return"
+            ), prefix=r"\b", suffix=r"\b"), Keyword
             ),
-            (
-                r"(function)(\s*)([^\s\(]+)",
-                bygroups(Keyword.Declaration, Text, Name.Function),
-            ),
-            (r"\b(true|false)\b", Literal),
-            (
-                r"\b(function|module|include|use|for|intersection_for|if|else|return)\b",
-                Keyword,
-            ),
-            (
-                r"\b(circle|square|polygon|text|sphere|cube|cylinder|polyhedron|translate|rotate|scale|resize|mirror|multmatrix|color|offset|hull|minkowski|union|difference|intersection|abs|sign|sin|cos|tan|acos|asin|atan|atan2|floor|round|ceil|ln|log|pow|sqrt|exp|rands|min|max|concat|lookup|str|chr|search|version|version_num|norm|cross|parent_module|echo|import|import_dxf|dxf_linear_extrude|linear_extrude|rotate_extrude|surface|projection|render|dxf_cross|dxf_dim|let|assign|len)\b",
-                Name.Builtin,
+            (words((
+                "circle", "square", "polygon", "text", "sphere", "cube",
+                "cylinder", "polyhedron", "translate", "rotate", "scale",
+                "resize", "mirror", "multmatrix", "color", "offset", "hull",
+                "minkowski", "union", "difference", "intersection", "abs",
+                "sign", "sin", "cos", "tan", "acos", "asin", "atan", "atan2",
+                "floor", "round", "ceil", "ln", "log", "pow", "sqrt", "exp",
+                "rands", "min", "max", "concat", "lookup", "str", "chr",
+                "search", "version", "version_num", "norm", "cross",
+                "parent_module", "echo", "import", "import_dxf",
+                "dxf_linear_extrude", "linear_extrude", "rotate_extrude",
+                "surface", "projection", "render", "dxf_cross",
+                "dxf_dim", "let", "assign", "len"
+            ), prefix=r"\b", suffix=r"\b"),
+             Name.Builtin
             ),
             (r"\bchildren\b", Name.Builtin.Pseudo),
-            (r"&#34;(\\\\|\\&#34;|[^&#34;])*&#34;", Literal.StringDouble),
-            (r"-?\d+(\.\d+)?(e[+-]?\d+)?", Literal.Number),
-            (r"[a-zA-Z_]\w*", Name),
+            (r'""".*?"""', String.Double),
+            (r'"(\\\\|\\[^\\]|[^"\\])*"', String.Double),
+            (r"-?\d+(\.\d+)?(e[+-]?\d+)?", Number),
+            (r"\w+", Name),
         ],
         "includes": [
             (
-                r"(&lt;)([^&gt;]*)(&gt;)",
+                r"(<)([^>]*)(>)",
                 bygroups(Punctuation, Comment.PreprocFile, Punctuation),
             ),
+        ],
+        'comment': [
+            (r':param: [a-zA-Z_]\w*|:returns?:|(FIXME|MARK|TODO):',
+             Comment.Special)
+        ],
+        'comment-single': [
+            (r'\n', Text, '#pop'),
+            include('comment'),
+            (r'[^\n]+', Comment.Single)
+        ],
+        'comment-multi': [
+            include('comment'),
+            (r'[^*/]+', Comment.Multiline),
+            (r'/\*', Comment.Multiline, '#push'),
+            (r'\*/', Comment.Multiline, '#pop'),
+            (r'[*/]', Comment.Multiline)
         ],
     }

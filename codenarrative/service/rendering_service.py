@@ -11,7 +11,7 @@ from codenarrative.service import image_service
 from codenarrative.service import video_service
 from codenarrative.service import cursor_service
 
-KEYPRESS_DURATION_MS = 150
+KEYPRESS_DURATION_MS = 100
 OBJECT_FADE_MS = 1000
 
 
