@@ -344,6 +344,10 @@ def get_xy(
                 chars_len + context.view_rectangle[0],
                 context.char_h * (row - 1) + context.view_rectangle[1],
             )
+    return (
+        context.char_w * (col - 1) + context.view_rectangle[0],
+        context.char_h * (row - 1) + context.view_rectangle[1],
+    )
 
 
 def token_color(token_type: _TokenType) -> str:

@@ -153,7 +153,9 @@ def mapping_line_to_pointer(
 def get_sound_pointer(context: SoundContext, keypress: Keypress) -> KeySoundPointer:
     pointers_len = len(context.key_sound_pointers)
     key_number = (
-        keypress.key.value if keypress.key != Key.OTHER else ord(keypress.char.lower())
+        keypress.key.value
+        if keypress.key != Key.OTHER
+        else ord(keypress.char[0].lower())
     )
     pos = key_number % pointers_len
     return context.key_sound_pointers[pos]

@@ -11,7 +11,7 @@ from codenarrative.service import image_service
 from codenarrative.service import video_service
 from codenarrative.service import cursor_service
 
-KEYPRESS_DURATION_MS = 100
+KEYPRESS_DURATION_MS = 120
 OBJECT_FADE_MS = 1000
 
 
@@ -166,7 +166,7 @@ def animate_keypresses(
 
         duration_f = round(
             image_context.profile.fps * KEYPRESS_DURATION_MS / 1000
-        ) + keypress_jitter_frames(state, image_context.profile.fps)
+        ) + keypress_jitter_frames(state, keypress, image_context.profile.fps)
 
         if image_context.profile.is_debug:
             duration_f = 1
@@ -184,18 +184,37 @@ def animate_keypresses(
             f = f + 1
 
 
-def keypress_jitter_frames(state: SceneState, fps: int) -> int:
+def keypress_jitter_frames(state: SceneState, keypress: Keypress, fps: int) -> int:
     jitter_f = round(fps / 3)
-    jitter_chars = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "+", '"', ":"]
+    jitter_chars = [
+        "!",
+        "@",
+        "#",
+        "$",
+        "%",
+        "^",
+        "&",
+        "*",
+        "(",
+        ")",
+        "+",
+        "-",
+        '"',
+        ":",
+        ";",
+        "[",
+        "]",
+        "=",
+        ".",
+        ",",
+        "/",
+        "\\"
+    ]
 
     if state.cursor.pos.col == 1:
         return jitter_f
 
-    if (
-        not state.code is None
-        and len(state.code.text) > state.cursor.index
-        and state.code.text[state.cursor.index] in jitter_chars
-    ):
+    if keypress.key != Key.OTHER or keypress.char[0] in jitter_chars:
         return jitter_f
 
     if not state.cursor.is_insert:
