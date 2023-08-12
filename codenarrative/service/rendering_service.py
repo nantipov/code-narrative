@@ -208,7 +208,7 @@ def keypress_jitter_frames(state: SceneState, keypress: Keypress, fps: int) -> i
         ".",
         ",",
         "/",
-        "\\"
+        "\\",
     ]
 
     if state.cursor.pos.col == 1:
